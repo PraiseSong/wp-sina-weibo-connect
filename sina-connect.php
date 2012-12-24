@@ -1,16 +1,21 @@
 <?php
 /*
-Plugin Name: 新浪连接
-Author:  Denis
-Author URI: http://fairyfish.net/
-Plugin URI: http://fairyfish.net/2010/06/08/sina-connect/
-Description: 使用新浪微博瓣账号登陆你的 WordPress 博客，并且留言使用新浪微博的头像，博主可以同步日志到新浪微博，用户可以同步留言到新浪微博。
-Version: 2.3.2
+Plugin Name: 新浪微博登录
+Author:  Praise Song
+Author URI: http://labs.cross.hk/
+Plugin URI: http://labs.cross.hk/html/1484.html
+Description: 使用新浪微博账号登录您的 WordPress 博客，并且可以使用新浪微博的头像。发布博客时还可以同步至新浪微博并且记录到指定的日志文件中。
+Version: 0.0.1
 */
 $sina_consumer_key = '499635422';
 $sina_consumer_secret = '07ee8787ff28f4fdd34487250a4a8c66';
 $sc_loaded = false;
 $post_author = '';
+$protocal = 'http';
+
+if ($_SERVER["HTTPS"] == "on"){
+        $protocal .= "s";
+}
 
 add_action('init', 'sc_init');
 function sc_init(){
@@ -29,6 +34,7 @@ function sc_init(){
 
 add_action("login_form", "sina_connect",999);
 add_action("register_form", "sina_connect",999);
+
 //add_action('comment_form_must_log_in_after','comment_form_must_log_in_after');
 
 function comment_form_must_log_in_after(){
@@ -42,7 +48,7 @@ function sina_connect($id='',$callback_url=null){
 
     //如果是后台页面跳转
     if(strpos($_GET['redirect_to'],'wp-admin') !== false){
-      $_GET['redirect_to'] = 'http://cross.hk/index.php?redirect_to='.$_GET['redirect_to'];
+      $_GET['redirect_to'] = $protocal.'://'.$_SERVER['HTTP_HOST'].'/index.php?redirect_to='.$_GET['redirect_to'];
     }
 
     $o = new SaeTOAuthV2( WB_AKEY , WB_SKEY );
@@ -77,7 +83,7 @@ function sc_get_avatar($avatar, $id_or_email='',$size='32') {
 	}
 
 	$current_user = wp_get_current_user();
-	$scid = /*get_usermeta($current_user->ID,'scid') ? get_usermeta($current_user->ID,'scid') : */get_usermeta($id_or_email, 'scid') ;
+	$scid = get_usermeta($id_or_email, 'scid') ;
 
     //工具条上显示的头像，必须是当前用户的头像
     //新浪用户则用scid，原博客用户直接使用Gavater
@@ -191,9 +197,16 @@ function sc_login($Userinfo,$sinaInfo) {
 		update_user_meta($wpuid, 'scdata', $sc_array);
 	}
 
-	if($wpuid) {
+	if($wpuid) {print_r($wpuid);
 		wp_set_auth_cookie($wpuid, true, false);
 		wp_set_current_user($wpuid);
+
+		do_action('wp_login', $user_login);
+        if (function_exists('get_admin_url')) {
+            wp_redirect(get_admin_url());
+        } else {
+            wp_redirect(get_bloginfo('wpurl') . '/wp-admin');
+        }
 	}
 }
 
