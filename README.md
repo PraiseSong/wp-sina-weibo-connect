@@ -22,4 +22,4 @@ Stable tag: 0.0.1
 
 上传至插件目录即可。详细安装请点击： http://labs.cross.hk/html/1484.html
 
-##Changelog ==
+##Changelog
